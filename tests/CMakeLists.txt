@@ -21,6 +21,18 @@ add_executable(test_mps_reader unit/io/test_mps_reader.cpp)
 target_link_libraries(test_mps_reader PRIVATE xenith_lib)
 add_test(NAME unit_mps_reader COMMAND test_mps_reader)
 
+add_executable(test_basis_manager unit/solver/test_basis_manager.cpp)
+target_link_libraries(test_basis_manager PRIVATE xenith_lib)
+add_test(NAME unit_basis_manager COMMAND test_basis_manager)
+
+add_executable(test_lu_factorization unit/numerics/test_lu_factorization.cpp)
+target_link_libraries(test_lu_factorization PRIVATE xenith_lib)
+add_test(NAME unit_lu_factorization COMMAND test_lu_factorization)
+
+add_executable(test_revised_simplex unit/solver/test_revised_simplex.cpp)
+target_link_libraries(test_revised_simplex PRIVATE xenith_lib)
+add_test(NAME unit_revised_simplex COMMAND test_revised_simplex)
+
 # Integration tests
 add_executable(test_model_numerics_pipeline integration/test_model_numerics_pipeline.cpp)
 target_link_libraries(test_model_numerics_pipeline PRIVATE xenith_lib)
@@ -34,4 +46,9 @@ add_executable(test_mps_cli_smoke integration/test_mps_cli_smoke.cpp)
 target_link_libraries(test_mps_cli_smoke PRIVATE xenith_lib)
 add_dependencies(test_mps_cli_smoke xenith_mps)
 add_test(NAME integration_mps_cli_smoke COMMAND test_mps_cli_smoke)
+
+add_executable(test_lp_solver_afiro integration/test_lp_solver_afiro.cpp)
+target_link_libraries(test_lp_solver_afiro PRIVATE xenith_lib)
+add_test(NAME integration_lp_solver_afiro COMMAND test_lp_solver_afiro)
+
 

@@ -162,10 +162,21 @@ FILES_TO_TOUCH = [
     "benchmarks/scripts/.gitkeep",
     "examples/lp/.gitkeep",
     "examples/mps/afiro.mps",
-    "examples/api/.gitkeep",
-    "tools/benchmark_runner/.gitkeep",
     "tools/model_inspector/main.cpp",
     "tools/solution_checker/.gitkeep",
+    "include/xenith/solver/common/basis_types.hpp",
+    "include/xenith/solver/common/basis_manager.hpp",
+    "include/xenith/solver/lp/revised_simplex_solver.hpp",
+    "include/xenith/numerics/lu_factorization.hpp",
+    "include/xenith/solution/lp_solution_validator.hpp",
+    "src/xenith/solver/common/basis_manager.cpp",
+    "src/xenith/solver/lp/revised_simplex_solver.cpp",
+    "src/xenith/numerics/lu_factorization.cpp",
+    "src/xenith/solution/lp_solution_validator.cpp",
+    "tests/unit/solver/test_basis_manager.cpp",
+    "tests/unit/solver/test_revised_simplex.cpp",
+    "tests/unit/numerics/test_lu_factorization.cpp",
+    "tests/integration/test_lp_solver_afiro.cpp",
 ]
 
 def main():

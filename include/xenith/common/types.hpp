@@ -56,6 +56,21 @@ inline std::string toString(VariableType type) {
     return "UNKNOWN";
 }
 
+/// Helper to convert ModelStatus to string representation.
+inline std::string toString(ModelStatus status) {
+    switch (status) {
+        case ModelStatus::UNINITIALIZED: return "UNINITIALIZED";
+        case ModelStatus::LOADED: return "LOADED";
+        case ModelStatus::VALIDATED: return "VALIDATED";
+        case ModelStatus::INFEASIBLE: return "INFEASIBLE";
+        case ModelStatus::OPTIMAL: return "OPTIMAL";
+        case ModelStatus::UNBOUNDED: return "UNBOUNDED";
+        case ModelStatus::ERROR: return "ERROR";
+    }
+    return "UNKNOWN";
+}
+
+
 } // namespace xenith
 
 #endif // XENITH_COMMON_TYPES_HPP

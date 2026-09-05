@@ -37,7 +37,7 @@ public:
         std::cout << "====================================================\n";
 
         for (const auto& test : m_tests) {
-            std::cout << "[ RUN      ] " << test.name << "\n";
+            std::cout << "[ RUN      ] " << test.name << std::endl;
             m_currentTestFailed = false;
             m_failureMessage.clear();
             try {
@@ -51,11 +51,11 @@ public:
             }
 
             if (!m_currentTestFailed) {
-                std::cout << "[       OK ] " << test.name << "\n";
+                std::cout << "[       OK ] " << test.name << std::endl;
                 passed++;
             } else {
-                std::cout << "[  FAILED  ] " << test.name << "\n";
-                std::cout << "             " << m_failureMessage << "\n";
+                std::cout << "[  FAILED  ] " << test.name << std::endl;
+                std::cout << "             " << m_failureMessage << std::endl;
                 failed++;
             }
         }
