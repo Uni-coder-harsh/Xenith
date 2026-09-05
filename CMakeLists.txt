@@ -58,9 +58,22 @@ target_compile_features(xenith_lib PUBLIC cxx_std_20)
 add_library(xenith_core INTERFACE)
 target_link_libraries(xenith_core INTERFACE xenith_lib)
 
+# User-facing MPS Inspector CLI Executable
+add_executable(xenith_mps tools/model_inspector/main.cpp)
+target_link_libraries(xenith_mps PRIVATE xenith_lib)
+set_target_properties(xenith_mps PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+add_custom_command(TARGET xenith_mps POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "$<TARGET_FILE:xenith_mps>"
+    "${CMAKE_BINARY_DIR}/bin/$<TARGET_FILE_NAME:xenith_mps>"
+    COMMENT "Copying xenith_mps executable to bin/ directory"
+)
+
 if(XENITH_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
 
-message(STATUS "Xenith Engine configured successfully (C++20). Target: xenith_lib")
+message(STATUS "Xenith Engine configured successfully (C++20). Target: xenith_lib, Executable: xenith_mps")
+

@@ -46,7 +46,10 @@
    - Structured error handling via `MpsParseException` and detailed `MpsParseError`.
 3. **Verification & Testing (`tests/unit/io/test_mps_reader.cpp`, `tests/integration/`)**:
    - Test suite covering all MPS section formats, bound types, marker cards, free format syntax, and canonical model equivalence.
-   - 100% pass across all 7 test executables.
+   - User-facing CLI tool (`xenith_mps`) for command-line MPS parsing, inspection, and invariant validation.
+   - Automated CLI integration smoke test (`test_mps_cli_smoke`) verifying valid MPS parsing, nonexistent file errors, and malformed syntax exceptions.
+   - 100% pass across all 8 test executables.
+
 
 ---
 

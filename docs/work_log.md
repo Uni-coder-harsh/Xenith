@@ -145,5 +145,42 @@ This document serves as a persistent record of all tasks executed by the AI deve
 #### 📌 Current Repository State
 - **Phase**: Phase 2 Complete (MPS Input Layer Implemented & Verified)
 - **Build Status**: CMake `xenith_lib` target and 7 test executables build and pass 100% clean.
-- **Git Status**: Phase 2 implementation ready for commit and push to `origin main`.
+- **Git Status**: Phase 2 implementation committed and pushed to `origin main`.
+
+---
+
+### Entry 005 — Phase 2 Acceptance & MPS Compiler Smoke Test Verification
+- **Date & Time**: 2026-09-05T14:40:00+05:30
+- **Task Summary**: Created user-facing CLI executable (`xenith_mps`), verified real-world parsing on Netlib `afiro.mps` and arbitrary external MPS files, established automated CLI smoke test suite (`test_mps_cli_smoke`), updated user documentation in `README.md`, and performed a clean build verification.
+
+#### ✅ Major Accomplishments & Successes
+1. **User-Facing CLI Executable (`tools/model_inspector/main.cpp`, target `xenith_mps`)**:
+   - Built CLI executable accepting arbitrary `.mps` file paths via command line (`./build/xenith_mps <path-to-mps>`).
+   - Outputs human-readable model summary (Name, Variables, Constraints, Nonzeros, Objective sense, Integer/Binary variable counts, and Validation status).
+   - Handles missing file, invalid arguments, and malformed MPS syntax with structured error reporting and non-zero exit codes.
+2. **Real-World Netlib `afiro.mps` & External MPS Acceptance Tests**:
+   - Parsed Netlib benchmark instance `afiro.mps` (Name: `AFIRO`, 32 variables, 27 constraints, 83 nonzeros, MINIMIZE sense, validation PASSED, exit 0).
+   - Parsed external file outside repo fixture path (`/tmp/external_test_problem.mps`) confirming runtime file path independence without code modifications or rebuilds.
+3. **Automated CLI Smoke Test Suite (`tests/integration/test_mps_cli_smoke.cpp`)**:
+   - Added automated CTest test (`integration_mps_cli_smoke`) verifying valid MPS parsing exit 0, nonexistent file exit 1, and malformed MPS file exit 1.
+   - Total test count expanded to 8 test targets with 100% pass rate in 0.03 seconds.
+4. **Clean Build Verification**:
+   - Verified `rm -rf build && cmake -S . -B build && cmake --build build && ctest --test-dir build --output-on-failure`. Clean configuration, compilation, linking, and 8/8 tests passed.
+5. **Documentation & Demonstration Instructions**:
+   - Updated `README.md` with explicit demonstration instructions for live testing of arbitrary MPS files.
+   - Updated `docs/status.md` and `docs/roadmap.md` confirming Phase 2 Acceptance as COMPLETE.
+
+#### ❌ Failures & Issues Encountered (And How They Were Resolved)
+1. **Issue 1: Corrupted Binary `afiro.mps` Fixture**:
+   - *Failure*: Initial attempt to run `xenith_mps` against `examples/mps/afiro.mps` triggered a diagnostic error (`Missing required ROWS section`) because the file contained binary string artifacts.
+   - *Resolution*: Downloaded standard uncompressed ASCII Netlib `afiro.mps` from COIN-OR sample repository to both `examples/mps/afiro.mps` and `tests/data/mps/afiro.mps`.
+2. **Issue 2: Method Name Typo (`nonzeros()` vs `nonZeros()`)**:
+   - *Failure*: `main.cpp` build failed with `error: ‘const class xenith::numerics::SparseMatrix’ has no member named ‘nonzeros’; did you mean ‘nonZeros’?`.
+   - *Resolution*: Updated call to `model.matrixA().nonZeros()`.
+
+#### 📌 Current Repository State
+- **Phase**: Phase 2 Acceptance Complete (MPS Parser Input Pipeline Verified & Ready for Phase 3)
+- **Build Status**: CMake `xenith_lib`, `xenith_mps` executable, and 8 test executables build and pass 100% clean.
+- **Git Status**: Phase 2 Acceptance ready for final git commit and push to `origin main`.
+
 

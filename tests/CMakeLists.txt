@@ -29,3 +29,9 @@ add_test(NAME integration_model_numerics COMMAND test_model_numerics_pipeline)
 add_executable(test_mps_canonical_equivalence integration/test_mps_canonical_equivalence.cpp)
 target_link_libraries(test_mps_canonical_equivalence PRIVATE xenith_lib)
 add_test(NAME integration_mps_canonical_equivalence COMMAND test_mps_canonical_equivalence)
+
+add_executable(test_mps_cli_smoke integration/test_mps_cli_smoke.cpp)
+target_link_libraries(test_mps_cli_smoke PRIVATE xenith_lib)
+add_dependencies(test_mps_cli_smoke xenith_mps)
+add_test(NAME integration_mps_cli_smoke COMMAND test_mps_cli_smoke)
+

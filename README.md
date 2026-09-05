@@ -119,13 +119,86 @@ xenith/
 
 ---
 
+## 🚀 Running XENITH on an MPS File
+
+XENITH provides a user-facing command-line tool `xenith_mps` to parse, inspect, and validate any Mathematical Programming System (MPS) optimization model file:
+
+```bash
+# Build XENITH executable
+cmake -S . -B build
+cmake --build build
+
+# Inspect an MPS file
+./build/xenith_mps tests/data/mps/afiro.mps
+```
+
+### Demonstration Pipeline:
+
+```text
+Input (.mps file)
+        ↓
+   MPS Reader
+        ↓
+ CanonicalModel
+        ↓
+ Model Validator
+        ↓
+  Model Summary
+```
+
+> **[!NOTE]**
+> At this stage, XENITH parses, tokenizes, and validates optimization models, producing canonical structural representations and invariant checks, but does **not** solve them yet (solvers are implemented in Phase 3+).
+
+---
+
+## 🎬 How to Demonstrate an Arbitrary MPS File
+
+To test or demonstrate XENITH on any standard `.mps` file without changing source code or rebuilding:
+
+1. **Build XENITH**:
+   ```bash
+   cmake --build build
+   ```
+2. **Execute `xenith_mps` with any file path**:
+   ```bash
+   ./build/xenith_mps /path/to/any_problem.mps
+   ```
+3. **Observe the model summary and validation check**:
+   ```text
+   XENITH MPS Reader
+   -----------------
+   File: /path/to/any_problem.mps
+
+   Parse status: SUCCESS
+
+   Model:
+     Name: PROBLEM_NAME
+     Variables: 32
+     Constraints: 27
+     Nonzeros: 83
+     Objective sense: MINIMIZE
+     Integer variables: 0
+     Binary variables: 0
+
+   Validation: PASSED
+   ```
+
+*Note: Changing the input `.mps` file only requires running the command again with a new file path. No source code modifications, CMake changes, or rebuilds are required.*
+
+---
+
 ## 📌 Development Status
 
-Current Phase: **Phase 0 — Repository & Architectural Foundation**
+Current Phase: **Phase 2 Complete — MPS Input Layer & Validation Acceptance Verified**
 
-- **Completed**: Repository structure, architectural documentation, ADRs (001–010), canonical model specification, numerical core architecture, and build setup.
-- **In Progress**: Core numeric linear algebra design and canonical model implementation plans.
-- **Not Implemented Yet**: Simplex algorithms, MPS parser, presolve transformations, factorization update routines, GPU execution, MILP/QP solvers.
+- **Completed**:
+  - Repository structure, architectural documentation, ADRs (001–012), build setup.
+  - C++20 `CanonicalModel` representation & `ModelValidator` invariant engine.
+  - Sparse Matrix CSC/CSR abstractions & vector numerics primitives.
+  - Section-aware `MpsReader` engine supporting fixed and free format MPS files.
+  - 8 automated test suites passing 100% clean (`unit_vector_ops`, `unit_sparse_matrix`, `unit_canonical_model`, `unit_model_validator`, `unit_mps_reader`, `integration_model_numerics`, `integration_mps_canonical_equivalence`, `integration_mps_cli_smoke`).
+- **In Progress**: Preparing for Phase 3 (Basis Management, LU Factorization & FTRAN/BTRAN Solves).
+- **Not Implemented Yet**: Simplex algorithms, presolve transformations, factorization update routines, GPU execution, MILP/QP solvers.
 
 For full status and phase boundaries, see [`docs/status.md`](docs/status.md) and [`docs/roadmap.md`](docs/roadmap.md).
 For a detailed task execution history tracking completed work, successes, and resolved issues, see [`docs/work_log.md`](docs/work_log.md).
@@ -135,3 +208,4 @@ For a detailed task execution history tracking completed work, successes, and re
 ## 📜 License
 
 XENITH is distributed under the terms of the [Apache License (Version 2.0)](LICENSE).
+

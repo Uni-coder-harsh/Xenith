@@ -146,6 +146,7 @@ FILES_TO_TOUCH = [
     "tests/unit/solver/.gitkeep",
     "tests/unit/solution/.gitkeep",
     "tests/integration/test_mps_canonical_equivalence.cpp",
+    "tests/integration/test_mps_cli_smoke.cpp",
     "tests/data/mps/minimal_lp.mps",
     "tests/data/mps/equality_row.mps",
     "tests/data/mps/greater_than_row.mps",
@@ -154,6 +155,7 @@ FILES_TO_TOUCH = [
     "tests/data/mps/duplicate_coeffs.mps",
     "tests/data/mps/free_format.mps",
     "tests/data/mps/malformed_missing_rows.mps",
+    "tests/data/mps/afiro.mps",
     "tests/data/mps/README.md",
     "tests/regression/.gitkeep",
     "benchmarks/configs/.gitkeep",
@@ -162,7 +164,7 @@ FILES_TO_TOUCH = [
     "examples/mps/afiro.mps",
     "examples/api/.gitkeep",
     "tools/benchmark_runner/.gitkeep",
-    "tools/model_inspector/.gitkeep",
+    "tools/model_inspector/main.cpp",
     "tools/solution_checker/.gitkeep",
 ]
 
