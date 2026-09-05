@@ -13,6 +13,7 @@ Welcome to the documentation for **XENITH**, a sovereign mathematical optimizati
 - [Numerical Core Architecture](architecture/numerical_architecture.md) — Linear algebra abstractions, sparse matrix formats, vectors, factorizations, and tolerances.
 - [Hardware & Runtime Architecture](architecture/runtime_architecture.md) — Execution backend isolation, SIMD/AVX vectorization, thread management, and platform strategy.
 - [System Extensibility & Modularity](architecture/extensibility.md) — Architectural provisions for LP, MILP, QP, NLP expansion without refactoring core layers.
+- [Reversible Presolve & Postsolve Architecture](architecture/presolve_design.md) — Stack-based reversible presolve transformation pipeline.
 
 ---
 
@@ -24,7 +25,7 @@ Welcome to the documentation for **XENITH**, a sovereign mathematical optimizati
 ### ⚡ Optimization Algorithms
 - [LP Solver Overview](algorithms/lp/overview.md) — Strategic roadmap for LP algorithms (Revised Simplex, Dual Simplex, Interior Point).
 - [Revised Simplex Algorithm](algorithms/lp/revised_simplex.md) — Mathematical specification, phase I/II execution, pricing, ratio test, and pivoting.
-- [Basis Management](algorithms/lp/basis.md) — First-class basis matrix abstraction, status tracking, refactorization criteria, and numerical stability.
+- [Basis Management & Warm Starts](algorithms/lp/basis.md) — First-class basis matrix abstraction, status tracking, refactorization criteria, and warm-starts.
 - [Basis Factorization & Updates](algorithms/lp/factorization.md) — LU factorization algorithms, Forrest-Tomlin / Bartels-Golub update schemes, and precision recovery.
 
 ---
@@ -59,6 +60,8 @@ Welcome to the documentation for **XENITH**, a sovereign mathematical optimizati
   - [ADR-008: MPS as Initial Benchmark and Interchange Interface](decisions/ADR-008-mps-input.md)
   - [ADR-009: Platform-Independent Core with Isolated Hardware Backends](decisions/ADR-009-platform-independent-core.md)
   - [ADR-010: Benchmarking as a First-Class Subsystem](decisions/ADR-010-benchmarking.md)
+  - [ADR-011: Warm-Start Basis and Re-optimization Support](decisions/ADR-011-warm-start-reoptimization.md)
+  - [ADR-012: Reversible Stack-Based Presolve Architecture](ADR-012-reversible-presolve-stack.md)
 
 ---
 

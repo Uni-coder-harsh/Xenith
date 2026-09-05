@@ -1,22 +1,23 @@
 # XENITH Canonical Model Specification
 
-The **Canonical Model** is the central mathematical representation in XENITH. All input formats (MPS, future LP format, Python/C++ APIs) must map into this uniform internal structure before model validation, presolve, or solving occurs.
+The **Canonical Model** (`xenith/model/CanonicalModel`) is the central mathematical representation in XENITH. All input formats (MPS, LP format, Python/C++ APIs) map into this uniform intermediate structure before model validation, presolve, or solving occurs.
 
 ---
 
 ## 📐 Mathematical Formulation
 
-XENITH adopts a **Bounded-Row Canonical LP Form**:
+XENITH adopts a **Bounded-Row Canonical LP Form** with extensions for Quadratic Objective matrices ($Q$) and Integrality Metadata:
 
 $$\begin{aligned}
-\min \quad & c^T x \quad (\text{or } \max c^T x) \\
+\min \quad & c^T x + \frac{1}{2} x^T Q x \quad (\text{or } \max) \\
 \text{subject to} \quad & l_r \le A x \le u_r \\
 \text{and} \quad & l_x \le x \le u_x
 \end{aligned}$$
 
 where:
-- $x \in \mathbb{R}^n$ is the $n$-dimensional decision variable vector.
-- $c \in \mathbb{R}^n$ is the objective coefficient vector.
+- $x \in \mathbb{R}^n$ is the decision variable vector of length $n$.
+- $c \in \mathbb{R}^n$ is the linear objective coefficient vector.
+- $Q \in \mathbb{R}^{n \times n}$ is an optional sparse symmetric matrix representing quadratic objective terms (empty for pure LP/MILP).
 - $A \in \mathbb{R}^{m \times n}$ is the sparse constraint matrix with $m$ rows and $n$ columns.
 - $l_r, u_r \in (\mathbb{R} \cup \{-\infty, +\infty\})^m$ are row lower and upper bound vectors.
 - $l_x, u_x \in (\mathbb{R} \cup \{-\infty, +\infty\})^n$ are variable lower and upper bound vectors.
@@ -39,66 +40,30 @@ Traditional textbook LP implementations convert constraints into standard form $
 
 ---
 
-## 🏷️ Future MILP Integrality Metadata
+## 🏷️ Future MILP & QP Extensions
 
-To ensure smooth future expansion to Mixed-Integer Linear Programming (MILP) without refactoring the model layer, each variable $x_j$ carries a variable type metadata field:
+1. **Integrality Metadata (MILP)**:
+   Each variable $x_j$ carries a type metadata field (`CONTINUOUS`, `GENERAL_INTEGER`, `BINARY`, `SEMI_CONTINUOUS`, `SEMI_INTEGER`).
+   *Note: LP solver routines ignore integrality metadata, treating all variables as continuous. MILP branch-and-bound inspects integrality flags to drive branching decisions.*
 
-- `CONTINUOUS`: $x_j \in \mathbb{R}$
-- `GENERAL_INTEGER`: $x_j \in \mathbb{Z}$
-- `BINARY`: $x_j \in \{0, 1\}$ (with bounds $l_x = 0, u_x = 1$)
-- `SEMI_CONTINUOUS`: $x_j = 0$ or $l_x \le x_j \le u_x$
-- `SEMI_INTEGER`: $x_j = 0$ or $x_j \in \mathbb{Z} \cap [l_x, u_x]$
-
-*Note: For Phase 0 and initial LP development, all variables are treated as `CONTINUOUS`. Integrality metadata is preserved for validation and presolve.*
+2. **Quadratic Objective Matrix $Q$ (QP)**:
+   The optional $Q$ matrix stores quadratic terms $\frac{1}{2} x_i Q_{ij} x_j$. When empty ($\text{nnz}(Q) = 0$), the model defaults cleanly to pure Linear Programming without runtime checks or memory overhead in LP code paths.
 
 ---
 
 ## 🔒 Invariants Maintained by Canonical Model
 
-1. **Dimensional Consistency**:
-   - $c, l_x, u_x$, and variable types have length $n$ (`num_variables`).
-   - $l_r, u_r$ have length $m$ (`num_constraints`).
-   - Sparse matrix $A$ has dimension $m \times n$.
-2. **Valid Bounds**:
-   - $l_x[j] \le u_x[j]$ for all $j \in \{0, \dots, n-1\}$. If $l_x[j] > u_x[j]$, model is flagged infeasible during validation.
-   - $l_r[i] \le u_r[i]$ for all $i \in \{0, \dots, m-1\}$. If $l_r[i] > u_r[i]$, model is flagged infeasible during validation.
-3. **No Non-Finite Matrix Entries**: Sparse matrix entries must be finite non-zero real numbers ($|A_{ij}| > 0$, no $\text{NaN}$ or $\pm\infty$).
-4. **Deterministic Variable & Constraint Names**: Every row and column has unique string identifiers with efficient integer index lookup tables.
+| Invariant Category | Rule & Enforcement |
+| :--- | :--- |
+| **Dimensional Consistency** | $\text{len}(c) = \text{len}(l_x) = \text{len}(u_x) = \text{len}(\text{var\_types}) = n$; $\text{len}(l_r) = \text{len}(u_r) = m$; $\text{dim}(A) = m \times n$. |
+| **Bound Validity** | $l_x[j] \le u_x[j] \ \forall j$; $l_r[i] \le u_r[i] \ \forall i$. Invalid bounds flag model infeasible during validation. |
+| **Finite Matrix Entries** | Matrix $A$ non-zeros must be finite non-zero real numbers ($|A_{ij}| > 0$, no $\text{NaN}$ or $\pm\infty$). |
+| **Unique Identifiers** | Variable and constraint string names must be unique; bidirectional string-to-index maps are maintained. |
+| **Symmetric Positive Semi-Definite $Q$** | If $Q$ is non-empty, $Q$ must be symmetric ($Q_{ij} = Q_{ji}$). |
 
 ---
 
-## 🗺️ Mapping External Inputs to Canonical Model
+## 🧠 Memory Ownership & Mutability Rules
 
-```mermaid
-flowchart LR
-    subgraph MPS Input
-        M_ROWS["ROWS Section\n(N, L, G, E)"]
-        M_COLS["COLUMNS Section\n(Matrix A, Obj c)"]
-        M_RHS["RHS Section\n(b_i)"]
-        M_RANGES["RANGES Section\n(r_i)"]
-        M_BOUNDS["BOUNDS Section\n(LO, UP, FX, FR, MI, PL, BV, LI, UI)"]
-    end
-
-    subgraph Canonical Model
-        C_OBJ["c: Objective Vector"]
-        C_MAT["A: Sparse Matrix (CSR/CSC)"]
-        C_ROW_BND["l_r, u_r: Row Bounds"]
-        C_VAR_BND["l_x, u_x: Variable Bounds"]
-        C_TYPE["Type: Integrality Metadata"]
-    end
-
-    M_ROWS --> C_ROW_BND
-    M_RHS --> C_ROW_BND
-    M_RANGES --> C_ROW_BND
-    M_COLS --> C_MAT
-    M_COLS --> C_OBJ
-    M_BOUNDS --> C_VAR_BND
-    M_BOUNDS --> C_TYPE
-```
-
----
-
-## 📝 Documented Implementation Rules
-
-- Do **NOT** embed simplex slack variables directly into `CanonicalModel`. Slack introduction occurs internally within the LP solver's algorithm workspace.
-- The `CanonicalModel` owns its numerical data immutably after model construction and validation. Presolve produces a *new* reduced `CanonicalModel` rather than mutating the original model in place.
+- `CanonicalModel` owns its numerical buffers exclusively (`std::vector<double>`, `SparseMatrix`).
+- Model ownership is **immutable** once passed into `Presolve` or `SolverManager`. Presolve transforms `CanonicalModel` by creating a new reduced instance rather than mutating original data in place.

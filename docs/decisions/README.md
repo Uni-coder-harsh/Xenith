@@ -16,3 +16,5 @@ Architectural Decision Records document major technical decisions made during th
 - [ADR-008: MPS Format as Initial Input and Interchange Interface](ADR-008-mps-input.md)
 - [ADR-009: Platform-Independent Core with Isolated Hardware Backends](ADR-009-platform-independent-core.md)
 - [ADR-010: Benchmarking Subsystem as a First-Class Citizen](ADR-010-benchmarking.md)
+- [ADR-011: Warm-Start Basis and Re-optimization Support](ADR-011-warm-start-reoptimization.md)
+- [ADR-012: Reversible Stack-Based Presolve Architecture](ADR-012-reversible-presolve-stack.md)

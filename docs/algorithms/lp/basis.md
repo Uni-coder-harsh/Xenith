@@ -1,6 +1,6 @@
-# Basis Management Specification
+# Basis Management & Re-optimization Specification
 
-In XENITH, the **Basis** is treated as a first-class solver concept (`xenith/solver/lp/BasisManager`). It encapsulates the status of every decision variable and slack variable relative to constraint bounds.
+In XENITH, the **Basis** is managed as a first-class solver concept (`xenith/solver/lp/BasisManager`). It encapsulates variable basis states, controls factorizations, and enables warm-start re-optimization.
 
 ---
 
@@ -29,11 +29,22 @@ $$B = [A_{:, j_1}, A_{:, j_2}, \dots, A_{:, j_m}]$$
 
 ---
 
-## 🔄 Pivot Swap Operation
+## 🔄 Warm-Start & Re-optimization Architecture
 
-When column $j_{\text{in}}$ enters the basis and basis position $i_{\text{out}}$ leaves:
+Re-optimization is essential for efficient MILP solving (resolving LP relaxations after branch child node creation or cutting plane additions) and interactive resolve:
 
-1. `basis_status[var_leaving]` updates from `BASIC` to `AT_LOWER` or `AT_UPPER` depending on ratio test.
-2. `basis_status[var_entering]` updates from nonbasic status to `BASIC`.
-3. `basic_index_to_var[i_out]` is set to `var_entering`.
-4. `BasisFactorization` is notified to update LU representation via rank-1 modification.
+```mermaid
+flowchart TD
+    A["Original LP Solve"] --> B["Optimal Basis Header (BasisHeader)"]
+    B --> C["MILP Branch Node / Bound Tightening"]
+    C --> D["Warm-Start LP Initialization"]
+    D --> E["Dual Simplex Engine (0-1 Phase I Pivots Needed)"]
+```
+
+### Warm-Start Data Structure (`BasisHeader`):
+- Array of basis status flags for all variables and slacks.
+- Previous factorization status hints.
+
+### Re-optimization Execution Rules:
+1. **Preserve Basis Across Solve Calls**: When bounds $l_x, u_x$ or row bounds $l_r, u_r$ are tightened during branch-and-bound, the previous optimal basis is loaded directly into `BasisManager`.
+2. **Dual Simplex Fast Track**: Dual Simplex starts directly from the warm-start basis. Dual feasibility is maintained, allowing convergence in a fraction of Phase I/II iterations.
