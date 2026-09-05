@@ -1,0 +1,10 @@
+NAME          GREATER_THAN_ROW
+ROWS
+ N  COST
+ G  GT_ROW
+COLUMNS
+    X1        COST      1.0       GT_ROW    5.0
+RHS
+    RHS1      GT_ROW    15.0
+BOUNDS
+ENDATA

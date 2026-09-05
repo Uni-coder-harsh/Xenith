@@ -105,3 +105,45 @@ This document serves as a persistent record of all tasks executed by the AI deve
 - **Phase**: Phase 1 Complete (Canonical Model & Numerical Foundations Implemented)
 - **Build Status**: CMake `xenith_lib` target and 5 test executables build and pass 100% clean.
 - **Git Status**: Changes staged, committed, and pushed to `origin main`.
+
+---
+
+### Entry 004 — Phase 2: MPS Input Layer & Model Parser Integration Implementation
+- **Date & Time**: 2026-09-05T14:20:00+05:30
+- **Task Summary**: Implementation of standard MPS file parser (`xenith::io::mps::MpsReader`), lexer/tokenizer supporting fixed/free formats, bound card mappings, integer marker card handling, automated diagnostic reporting, and equivalence test suite.
+
+#### ✅ Major Accomplishments & Successes
+1. **MPS Subsystem Data Structures & Exceptions (`include/xenith/io/mps/mps_types.hpp`)**:
+   - Defined `MpsSection` enum state machine (`NONE`, `NAME`, `OBJSENSE`, `ROWS`, `COLUMNS`, `RHS`, `RANGES`, `BOUNDS`, `ENDATA`).
+   - Defined `MpsReaderOptions` struct for objective row override, validation toggling, and warning controls.
+   - Defined `MpsParseError` struct and `MpsParseException` class for precise diagnostic reporting.
+2. **MPS Reader Engine (`include/xenith/io/mps/mps_reader.hpp`, `src/xenith/io/mps/mps_reader.cpp`)**:
+   - Built full section-aware stream reader supporting `readFromFile`, `readFromStream`, `readFromString`.
+   - Tokenization logic supporting fixed 8-character fields as well as space/tab delimited free format MPS files.
+   - Handled `ROWS` section (`N`, `L`, `G`, `E` senses) and objective row selection.
+   - Handled `COLUMNS` section with coefficient accumulation for duplicate variable-row entries.
+   - Handled integer marker cards (`'MARK0000'`, `'INTORG'`, `'INTEND'`) setting `VariableType::GENERAL_INTEGER` without synthetic variables or entries.
+   - Handled `RHS` section applying constraint right-hand-side values $b_i$.
+   - Handled `RANGES` section applying MPS range constraint transformation rules.
+   - Handled `BOUNDS` section supporting all 9 standard bound types (`LO`, `UP`, `FX`, `FR`, `MI`, `PL`, `BV`, `LI`, `UI`).
+   - Integrated automatic validation step invoking `ModelValidator::validate()`.
+3. **Synthetic Test Fixtures (`tests/data/mps/`)**:
+   - Created test fixtures: `minimal_lp.mps`, `equality_row.mps`, `greater_than_row.mps`, `bound_types.mps`, `integer_markers.mps`, `duplicate_coeffs.mps`, `free_format.mps`, `malformed_missing_rows.mps`, and `afiro.mps`.
+4. **Automated Unit & Integration Test Suite (`tests/unit/io/test_mps_reader.cpp`, `tests/integration/test_mps_canonical_equivalence.cpp`)**:
+   - Authored unit test suite checking section tokenization, bound type mappings, integer markers, duplicate accumulation, free format parsing, and malformed syntax exceptions.
+   - Authored integration test confirming 100% mathematical equivalence between programmatic `CanonicalModel` construction and MPS reader output.
+   - Total 7 test executables, 25 total test cases, **100% pass rate in 0.03 seconds**.
+
+#### ❌ Failures & Issues Encountered (And How They Were Resolved)
+1. **Issue 1: String Truncation Bug in `trim()`**:
+   - *Failure*: Initial string `trim()` used `str.find_last_of(" \t\r\n")` instead of `str.find_last_not_of(" \t\r\n")`. Line strings were truncated at the first trailing space, breaking section header recognition.
+   - *Resolution*: Corrected `trim()` to use `str.find_last_not_of(" \t\r\n")`.
+2. **Issue 2: CTest Relative Fixture Path Resolution**:
+   - *Failure*: Running tests from `build/` directory failed to find `tests/data/mps/minimal_lp.mps` relative to CTest binary directory.
+   - *Resolution*: Implemented `resolveFixturePath()` helper in `test_mps_reader.cpp` searching multiple relative path candidates (`tests/data/mps/`, `../tests/data/mps/`, `../../tests/data/mps/`).
+
+#### 📌 Current Repository State
+- **Phase**: Phase 2 Complete (MPS Input Layer Implemented & Verified)
+- **Build Status**: CMake `xenith_lib` target and 7 test executables build and pass 100% clean.
+- **Git Status**: Phase 2 implementation ready for commit and push to `origin main`.
+

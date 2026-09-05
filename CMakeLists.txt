@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(Xenith
-    VERSION 0.1.0
+    VERSION 0.2.0
     DESCRIPTION "Sovereign Mathematical Optimization Solver Engine"
     LANGUAGES CXX
 )
@@ -44,6 +44,7 @@ add_library(xenith_lib STATIC
     src/xenith/numerics/sparse_matrix.cpp
     src/xenith/model/canonical_model.cpp
     src/xenith/model/model_validator.cpp
+    src/xenith/io/mps/mps_reader.cpp
 )
 
 target_include_directories(xenith_lib PUBLIC

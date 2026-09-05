@@ -1,0 +1,10 @@
+NAME          EQUALITY_ROW
+ROWS
+ N  COST
+ E  EQ_ROW
+COLUMNS
+    X1        COST      2.0       EQ_ROW    4.0
+RHS
+    RHS1      EQ_ROW    10.0
+BOUNDS
+ENDATA

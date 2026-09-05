@@ -17,7 +17,15 @@ add_executable(test_model_validator unit/model/test_model_validator.cpp)
 target_link_libraries(test_model_validator PRIVATE xenith_lib)
 add_test(NAME unit_model_validator COMMAND test_model_validator)
 
+add_executable(test_mps_reader unit/io/test_mps_reader.cpp)
+target_link_libraries(test_mps_reader PRIVATE xenith_lib)
+add_test(NAME unit_mps_reader COMMAND test_mps_reader)
+
 # Integration tests
 add_executable(test_model_numerics_pipeline integration/test_model_numerics_pipeline.cpp)
 target_link_libraries(test_model_numerics_pipeline PRIVATE xenith_lib)
 add_test(NAME integration_model_numerics COMMAND test_model_numerics_pipeline)
+
+add_executable(test_mps_canonical_equivalence integration/test_mps_canonical_equivalence.cpp)
+target_link_libraries(test_mps_canonical_equivalence PRIVATE xenith_lib)
+add_test(NAME integration_mps_canonical_equivalence COMMAND test_mps_canonical_equivalence)

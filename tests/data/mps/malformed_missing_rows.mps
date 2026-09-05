@@ -1,0 +1,4 @@
+NAME MALFORMED_NO_ROWS
+COLUMNS
+    X1        C1        1.0
+ENDATA

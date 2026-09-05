@@ -1,6 +1,6 @@
 # XENITH Development Status
 
-**Current Phase**: Phase 1 — Canonical Model & Numerical Foundations  
+**Current Phase**: Phase 2 — MPS Input Layer & Model Parser Integration  
 **Status**: Implemented & Verified  
 **Date**: September 5, 2026
 
@@ -34,7 +34,19 @@
    - Checks bound invariants ($l_x \le u_x$, $l_r \le u_r$) with structured diagnostic logs (e.g. `VAR_BOUND_REVERSED`).
    - Checks numerical invariants (no NaN, non-finite coefficient detection).
 6. **Automated Test Suite (`tests/`)**:
-   - 100% test pass rate across 5 test executables (`test_vector_ops`, `test_sparse_matrix`, `test_canonical_model`, `test_model_validator`, `test_model_numerics_pipeline`).
+   - 100% test pass rate across unit and integration tests.
+
+### Phase 2: MPS Input Layer & Model Parser Integration (Implemented)
+1. **MPS Subsystem Core (`xenith/io/mps/`)**:
+   - Implemented `MpsReader` API supporting `readFromFile`, `readFromStream`, and `readFromString`.
+   - Complete section-aware parsing: `NAME`, `OBJSENSE`, `ROWS` (`N, L, G, E`), `COLUMNS` (with `'MARK0000'`, `'INTORG'`, `'INTEND'`), `RHS`, `RANGES`, `BOUNDS` (`LO, UP, FX, FR, MI, PL, BV, LI, UI`), `ENDATA`.
+2. **Robust Lexer & Format Handling**:
+   - Supports fixed format (column positions) and free format (space/tab tokenization).
+   - Duplicate entry coefficient accumulation in matrix construction.
+   - Structured error handling via `MpsParseException` and detailed `MpsParseError`.
+3. **Verification & Testing (`tests/unit/io/test_mps_reader.cpp`, `tests/integration/`)**:
+   - Test suite covering all MPS section formats, bound types, marker cards, free format syntax, and canonical model equivalence.
+   - 100% pass across all 7 test executables.
 
 ---
 
@@ -42,7 +54,6 @@
 
 To maintain mathematical engineering integrity and avoid fake placeholders, the following components are **explicitly NOT implemented** at this stage:
 
-- ❌ MPS Parser implementation (`xenith::io::MpsReader`)
 - ❌ LP Simplex solver algorithms (Revised Simplex, Dual Simplex, Primal Simplex)
 - ❌ Interior Point barrier solver
 - ❌ Basis LU factorization and Forrest-Tomlin update routines
@@ -56,4 +67,5 @@ To maintain mathematical engineering integrity and avoid fake placeholders, the 
 
 ## ⏭️ Next Step
 
-Proceed to **Phase 2: MPS Input Layer & Model Parser Integration**.
+Proceed to **Phase 3: LP Solver Core (Basis Management, LU Factorization & FTRAN/BTRAN Solves)**.
+
