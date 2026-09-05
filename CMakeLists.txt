@@ -16,8 +16,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Option toggles
 option(XENITH_BUILD_TESTS "Build Xenith unit and integration tests" ON)
-option(XENITH_BUILD_EXAMPLES "Build Xenith usage examples" ON)
-option(XENITH_BUILD_TOOLS "Build Xenith inspection and benchmark tools" ON)
+option(XENITH_BUILD_EXAMPLES "Build Xenith usage examples" OFF)
+option(XENITH_BUILD_TOOLS "Build Xenith inspection and benchmark tools" OFF)
 option(XENITH_ENABLE_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 
 # Set output directories
@@ -38,33 +38,28 @@ else()
     endif()
 endif()
 
-# Include directories
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+# Xenith Library Target
+add_library(xenith_lib STATIC
+    src/xenith/numerics/vector_ops.cpp
+    src/xenith/numerics/sparse_matrix.cpp
+    src/xenith/model/canonical_model.cpp
+    src/xenith/model/model_validator.cpp
 )
 
-# Xenith Core Library (Foundation interface target for Phase 0)
-add_library(xenith_core INTERFACE)
-target_include_directories(xenith_core INTERFACE
+target_include_directories(xenith_lib PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_compile_features(xenith_core INTERFACE cxx_std_20)
 
-# Include Subdirectories when implementation components are introduced in future phases
-# add_subdirectory(src/xenith)
+target_compile_features(xenith_lib PUBLIC cxx_std_20)
+
+# Interface target alias for architectural backward compatibility
+add_library(xenith_core INTERFACE)
+target_link_libraries(xenith_core INTERFACE xenith_lib)
 
 if(XENITH_BUILD_TESTS)
     enable_testing()
-    # add_subdirectory(tests)
+    add_subdirectory(tests)
 endif()
 
-if(XENITH_BUILD_EXAMPLES)
-    # add_subdirectory(examples)
-endif()
-
-if(XENITH_BUILD_TOOLS)
-    # add_subdirectory(tools)
-endif()
-
-message(STATUS "Xenith Engine configured successfully (C++20).")
+message(STATUS "Xenith Engine configured successfully (C++20). Target: xenith_lib")
