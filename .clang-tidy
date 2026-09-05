@@ -1,0 +1,30 @@
+---
+Checks: >
+  clang-diagnostic-*,
+  bugprone-*,
+  cppcoreguidelines-*,
+  performance-*,
+  readability-*,
+  modernize-*,
+  -cppcoreguidelines-owning-memory,
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-magic-numbers
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: 'include/xenith/.*'
+
+FormatStyle: 'file'
+
+CheckOptions:
+  - key:             readability-identifier-naming.ClassCase
+    value:           PascalCase
+  - key:             readability-identifier-naming.FunctionCase
+    value:           camelCase
+  - key:             readability-identifier-naming.VariableCase
+    value:           snake_case
+  - key:             readability-identifier-naming.MemberPrefix
+    value:           'm_'
+  - key:             readability-identifier-naming.ConstantCase
+    value:           UPPER_CASE
+...

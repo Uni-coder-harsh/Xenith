@@ -1,0 +1,39 @@
+# Build directories
+build/
+bin/
+lib/
+cmake-build-*/
+out/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+dist/
+
+# Benchmark output and temporary instance caches
+benchmarks/instances/*.mps
+benchmarks/instances/*.mps.gz
+benchmarks/results/*.json
+benchmarks/results/*.csv
+
+# Log files
+*.log
