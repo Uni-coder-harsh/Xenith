@@ -177,6 +177,8 @@ FILES_TO_TOUCH = [
     "tests/unit/solver/test_revised_simplex.cpp",
     "tests/unit/numerics/test_lu_factorization.cpp",
     "tests/integration/test_lp_solver_afiro.cpp",
+    "include/xenith/ui/terminal_ui.hpp",
+    "src/xenith/ui/terminal_ui.cpp",
 ]
 
 def main():

@@ -9,6 +9,9 @@
 #include <sstream>
 #include <utility>
 #include <type_traits>
+#include <chrono>
+#include <iomanip>
+#include "xenith/ui/terminal_ui.hpp"
 
 namespace xenith::test {
 
@@ -29,17 +32,29 @@ public:
     }
 
     int runAll() {
+        using namespace xenith::ui;
+
         int passed = 0;
         int failed = 0;
 
-        std::cout << "====================================================\n";
-        std::cout << "Running XENITH Test Suite (" << m_tests.size() << " test cases)\n";
-        std::cout << "====================================================\n";
+        std::cout << "\n" 
+                  << TerminalUI::colorize("┌─────────────────────────────────────────────────────────────┐", ColorScheme::PURPLE, true) << "\n"
+                  << TerminalUI::colorize("│ ⚡ XENITH TEST SUITE EXECUTION                              │", ColorScheme::GOLD, true) << "\n"
+                  << TerminalUI::colorize("├─────────────────────────────────────────────────────────────┤", ColorScheme::PURPLE, true) << "\n"
+                  << TerminalUI::colorize("│ Total Test Cases: ", ColorScheme::PURPLE, true) 
+                  << TerminalUI::colorize(std::to_string(m_tests.size()), ColorScheme::WHITE, true) << "\n"
+                  << TerminalUI::colorize("└─────────────────────────────────────────────────────────────┘", ColorScheme::PURPLE, true) << "\n\n";
+
+        auto t_suite_start = std::chrono::high_resolution_clock::now();
 
         for (const auto& test : m_tests) {
-            std::cout << "[ RUN      ] " << test.name << std::endl;
+            std::cout << TerminalUI::colorize("[ RUN      ] ", ColorScheme::NEON_CYAN, true) 
+                      << TerminalUI::colorize(test.name, ColorScheme::WHITE, true) << std::endl;
+            
             m_currentTestFailed = false;
             m_failureMessage.clear();
+            
+            auto t_start = std::chrono::high_resolution_clock::now();
             try {
                 test.func();
             } catch (const std::exception& ex) {
@@ -49,20 +64,44 @@ public:
                 m_currentTestFailed = true;
                 m_failureMessage = "Unhandled unknown exception";
             }
+            auto t_end = std::chrono::high_resolution_clock::now();
+            double duration_ms = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+
+            std::stringstream ss_dur;
+            ss_dur << std::fixed << std::setprecision(2) << duration_ms << " ms";
 
             if (!m_currentTestFailed) {
-                std::cout << "[       OK ] " << test.name << std::endl;
+                std::cout << TerminalUI::colorize("[       OK ] ", ColorScheme::NEON_GREEN, true) 
+                          << TerminalUI::colorize(test.name, ColorScheme::WHITE, true) << " "
+                          << TerminalUI::colorize("(" + ss_dur.str() + ")", ColorScheme::GRAY) << std::endl;
                 passed++;
             } else {
-                std::cout << "[  FAILED  ] " << test.name << std::endl;
-                std::cout << "             " << m_failureMessage << std::endl;
+                std::cout << TerminalUI::colorize("[  FAILED  ] ", ColorScheme::RED, true) 
+                          << TerminalUI::colorize(test.name, ColorScheme::RED, true) << " "
+                          << TerminalUI::colorize("(" + ss_dur.str() + ")", ColorScheme::GRAY) << std::endl;
+                std::cout << TerminalUI::colorize("             ✖ ", ColorScheme::RED, true) 
+                          << TerminalUI::colorize(m_failureMessage, ColorScheme::WHITE) << std::endl;
                 failed++;
             }
         }
 
-        std::cout << "====================================================\n";
-        std::cout << "Test Summary: " << passed << " PASSED, " << failed << " FAILED.\n";
-        std::cout << "====================================================\n";
+        auto t_suite_end = std::chrono::high_resolution_clock::now();
+        double total_ms = std::chrono::duration<double, std::milli>(t_suite_end - t_suite_start).count();
+
+        std::stringstream ss_total;
+        ss_total << std::fixed << std::setprecision(2) << total_ms << " ms";
+
+        std::cout << "\n";
+        std::vector<TerminalUI::KeyValue> items = {
+            {"Total Tests Executed", std::to_string(m_tests.size()), ColorScheme::WHITE},
+            {"Passed Test Cases", std::to_string(passed), ColorScheme::NEON_GREEN, true},
+            {"Failed Test Cases", std::to_string(failed), (failed == 0 ? ColorScheme::NEON_GREEN : ColorScheme::RED), true},
+            {"Suite Execution Time", ss_total.str(), ColorScheme::GRAY},
+            {"Suite Status", (failed == 0 ? "100% PASSED ✔" : "FAILURES DETECTED ✖"), 
+                            (failed == 0 ? ColorScheme::NEON_GREEN : ColorScheme::RED), true}
+        };
+
+        TerminalUI::printBox("✦ TEST SUITE SUMMARY DASHBOARD", items, (failed == 0 ? ColorScheme::NEON_GREEN : ColorScheme::RED));
 
         return (failed == 0) ? 0 : 1;
     }
@@ -149,7 +188,7 @@ inline bool check_equal_helper(const T& a, const U& b) {
         } \
         if (!_caught) { \
             std::ostringstream _oss; \
-            _oss << "Expected exception " #ExceptionType " not thrown by (" #expression ") at " << __FILE__ << ":" << __LINE__; \
+            _oss << "Expected exception " #ExceptionType " was not thrown at " << __FILE__ << ":" << __LINE__; \
             ::xenith::test::TestRunner::instance().recordFailure(_oss.str()); \
             return; \
         } \

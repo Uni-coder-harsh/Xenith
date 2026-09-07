@@ -49,6 +49,7 @@ add_library(xenith_lib STATIC
     src/xenith/solver/common/basis_manager.cpp
     src/xenith/solver/lp/revised_simplex_solver.cpp
     src/xenith/solution/lp_solution_validator.cpp
+    src/xenith/ui/terminal_ui.cpp
 )
 
 target_include_directories(xenith_lib PUBLIC
