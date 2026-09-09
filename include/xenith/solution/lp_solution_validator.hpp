@@ -4,6 +4,7 @@
 #include "xenith/model/canonical_model.hpp"
 #include "xenith/model/model_validator.hpp"
 #include "xenith/solver/lp/revised_simplex_solver.hpp"
+#include "xenith/solver/lp/pdlp_types.hpp"
 
 namespace xenith::solution {
 
@@ -21,6 +22,17 @@ public:
      */
     static model::ValidationResult validate(const model::CanonicalModel& model,
                                              const solver::SolveResult& result,
+                                             double tolerance = 1e-5);
+
+    /**
+     * @brief Performs independent mathematical validation of a PDLP solver result against the CanonicalModel.
+     * @param model CanonicalModel instance.
+     * @param result PdlpResult produced by PdlpSolver.
+     * @param tolerance Numerical tolerance for bounds and objective checks (default 1e-5).
+     * @return ValidationResult containing validity flag and diagnostic list.
+     */
+    static model::ValidationResult validate(const model::CanonicalModel& model,
+                                             const solver::PdlpResult& result,
                                              double tolerance = 1e-5);
 };
 

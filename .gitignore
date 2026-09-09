@@ -37,3 +37,6 @@ benchmarks/results/*.csv
 
 # Log files
 *.log
+
+# Temporary tools
+tools/emps/

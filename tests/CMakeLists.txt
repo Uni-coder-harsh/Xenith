@@ -9,6 +9,14 @@ add_executable(test_sparse_matrix unit/numerics/test_sparse_matrix.cpp)
 target_link_libraries(test_sparse_matrix PRIVATE xenith_lib)
 add_test(NAME unit_sparse_matrix COMMAND test_sparse_matrix)
 
+add_executable(test_scaling unit/numerics/test_scaling.cpp)
+target_link_libraries(test_scaling PRIVATE xenith_lib)
+add_test(NAME unit_scaling COMMAND test_scaling)
+
+add_executable(test_pdlp_numerics unit/numerics/test_pdlp_numerics.cpp)
+target_link_libraries(test_pdlp_numerics PRIVATE xenith_lib)
+add_test(NAME unit_pdlp_numerics COMMAND test_pdlp_numerics)
+
 add_executable(test_canonical_model unit/model/test_canonical_model.cpp)
 target_link_libraries(test_canonical_model PRIVATE xenith_lib)
 add_test(NAME unit_canonical_model COMMAND test_canonical_model)
@@ -33,6 +41,14 @@ add_executable(test_revised_simplex unit/solver/test_revised_simplex.cpp)
 target_link_libraries(test_revised_simplex PRIVATE xenith_lib)
 add_test(NAME unit_revised_simplex COMMAND test_revised_simplex)
 
+add_executable(test_presolver unit/presolve/test_presolver.cpp)
+target_link_libraries(test_presolver PRIVATE xenith_lib)
+add_test(NAME unit_presolver COMMAND test_presolver)
+
+add_executable(test_pdlp_solver unit/solver/test_pdlp_solver.cpp)
+target_link_libraries(test_pdlp_solver PRIVATE xenith_lib)
+add_test(NAME unit_pdlp_solver COMMAND test_pdlp_solver)
+
 # Integration tests
 add_executable(test_model_numerics_pipeline integration/test_model_numerics_pipeline.cpp)
 target_link_libraries(test_model_numerics_pipeline PRIVATE xenith_lib)
@@ -51,4 +67,6 @@ add_executable(test_lp_solver_afiro integration/test_lp_solver_afiro.cpp)
 target_link_libraries(test_lp_solver_afiro PRIVATE xenith_lib)
 add_test(NAME integration_lp_solver_afiro COMMAND test_lp_solver_afiro)
 
-
+add_executable(test_netlib_benchmark_suite integration/test_netlib_benchmark_suite.cpp)
+target_link_libraries(test_netlib_benchmark_suite PRIVATE xenith_lib)
+add_test(NAME integration_netlib_benchmark_suite COMMAND test_netlib_benchmark_suite)

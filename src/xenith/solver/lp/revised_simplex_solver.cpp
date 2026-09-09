@@ -188,16 +188,13 @@ SolveResult RevisedSimplexSolver::solve(const model::CanonicalModel& model) {
         if (in_phase_i) {
             // Check if primal values satisfy feasibility
             double total_infeasibility = 0.0;
-            Index infeas_count = 0;
             for (Index v = 0; v < N; ++v) {
                 if (x_bar[v] < lower[v] - m_options.feasibility_tolerance) {
                     c_phase[v] = -1.0;
                     total_infeasibility += (lower[v] - x_bar[v]);
-                    infeas_count++;
                 } else if (x_bar[v] > upper[v] + m_options.feasibility_tolerance) {
                     c_phase[v] = 1.0;
                     total_infeasibility += (x_bar[v] - upper[v]);
-                    infeas_count++;
                 }
             }
 

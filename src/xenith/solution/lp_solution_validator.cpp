@@ -122,4 +122,18 @@ model::ValidationResult LpSolutionValidator::validate(const model::CanonicalMode
     return val_res;
 }
 
+model::ValidationResult LpSolutionValidator::validate(const model::CanonicalModel& model,
+                                                       const solver::PdlpResult& result,
+                                                       double tolerance) {
+    solver::SolveResult conv;
+    conv.status = result.status;
+    conv.primal_solution = result.primal_solution;
+    conv.objective_value = result.objective_value;
+    conv.iterations = result.iterations;
+    conv.primal_residual = result.primal_residual;
+    conv.dual_residual = result.dual_residual;
+    conv.message = result.message;
+    return validate(model, conv, tolerance);
+}
+
 } // namespace xenith::solution
