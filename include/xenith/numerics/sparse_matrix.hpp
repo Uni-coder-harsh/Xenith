@@ -107,6 +107,48 @@ public:
      */
     void multiplyTranspose(std::span<const double> x, std::span<double> y) const;
 
+    /**
+     * @brief Compute the infinity norm of each row.
+     * @param out Output vector of size rows().
+     */
+    void rowInfinityNorms(std::span<double> out) const;
+
+    /**
+     * @brief Compute the infinity norm of each column.
+     * @param out Output vector of size cols().
+     */
+    void colInfinityNorms(std::span<double> out) const;
+
+    /**
+     * @brief Compute the l1 norm of each row.
+     * @param out Output vector of size rows().
+     */
+    void rowL1Norms(std::span<double> out) const;
+
+    /**
+     * @brief Compute the l1 norm of each column.
+     * @param out Output vector of size cols().
+     */
+    void colL1Norms(std::span<double> out) const;
+
+    /**
+     * @brief Scale each row by the corresponding element in diag.
+     * @param diag Input vector of size rows().
+     */
+    void scaleRows(std::span<const double> diag);
+
+    /**
+     * @brief Scale each column by the corresponding element in diag.
+     * @param diag Input vector of size cols().
+     */
+    void scaleCols(std::span<const double> diag);
+
+    /**
+     * @brief Estimate spectral norm using power iteration.
+     * @param num_iters Number of iterations to run.
+     */
+    double spectralNormEstimate(Index num_iters = 50) const;
+
 private:
     Index m_rows{0};
     Index m_cols{0};

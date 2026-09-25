@@ -37,3 +37,39 @@ benchmarks/results/*.csv
 
 # Log files
 *.log
+
+# Compiled binaries, objects, and libraries
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Profiling and test artifacts
+Testing/
+*.gcno
+*.gcda
+*.gcov
+gmon.out
+perf.data*
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Environment files and credentials
+.env
+.env.*
+*.pem
+*.key
+
+# System crash dumps
+core
+core.*
+Thumbs.db
+
+# Temporary tools
+tools/emps/

@@ -41,35 +41,6 @@ std::vector<std::string> tokenizeFreeFormat(const std::string& line) {
     return tokens;
 }
 
-// Parse fixed-format fields from standard MPS line
-std::vector<std::string> tokenizeFixedFormat(const std::string& line) {
-    std::vector<std::string> tokens;
-
-    auto getSubstring = [&](std::size_t start, std::size_t len) -> std::string {
-        if (start >= line.size()) return "";
-        return trim(line.substr(start, len));
-    };
-
-    std::string f1 = getSubstring(1, 2);
-    std::string f2 = getSubstring(4, 8);
-    std::string f3 = getSubstring(14, 8);
-    std::string f4 = getSubstring(24, 12);
-    std::string f5 = getSubstring(38, 8);
-    std::string f6 = getSubstring(48, 12);
-
-    if (!f1.empty()) tokens.push_back(f1);
-    if (!f2.empty()) tokens.push_back(f2);
-    if (!f3.empty()) tokens.push_back(f3);
-    if (!f4.empty()) tokens.push_back(f4);
-    if (!f5.empty()) tokens.push_back(f5);
-    if (!f6.empty()) tokens.push_back(f6);
-
-    if (tokens.empty()) {
-        return tokenizeFreeFormat(line);
-    }
-    return tokens;
-}
-
 struct RowDef {
     char type{'N'};
     std::string name;
@@ -160,6 +131,10 @@ model::CanonicalModel MpsReader::readFromStream(std::istream& stream,
         return MpsParseException(err);
     };
 
+    static const std::unordered_set<std::string> SECTION_HEADERS = {
+        "NAME", "OBJSENSE", "ROWS", "COLUMNS", "RHS", "RANGES", "BOUNDS", "ENDATA"
+    };
+
     while (std::getline(stream, line)) {
         line_number++;
         std::string trimmed_line = trim(line);
@@ -169,58 +144,50 @@ model::CanonicalModel MpsReader::readFromStream(std::istream& stream,
             continue;
         }
 
-        std::vector<std::string> tokens = options.allow_free_format ?
-            tokenizeFreeFormat(trimmed_line) : tokenizeFixedFormat(line);
+        bool is_indicator = (line[0] != ' ' && line[0] != '\t');
+        std::vector<std::string> free_tokens = tokenizeFreeFormat(trimmed_line);
+        if (free_tokens.empty()) continue;
 
-        if (tokens.empty()) continue;
+        std::string first_token_upper = toUpper(free_tokens[0]);
 
-        std::string first_token_upper = toUpper(tokens[0]);
-
-        // Section header recognition
-        if (first_token_upper == "NAME") {
-            current_section = MpsSection::NAME;
-            if (tokens.size() >= 2) {
-                state.problem_name = tokens[1];
-            }
-            continue;
-        } else if (first_token_upper == "OBJSENSE") {
-            current_section = MpsSection::OBJSENSE;
-            if (tokens.size() >= 2) {
-                std::string sense_tok = toUpper(tokens[1]);
-                if (sense_tok == "MAX" || sense_tok == "MAXIMIZE") {
-                    state.sense = ObjectiveSense::MAXIMIZE;
-                } else if (sense_tok == "MIN" || sense_tok == "MINIMIZE") {
-                    state.sense = ObjectiveSense::MINIMIZE;
+        // Section header recognition: must start at column 1 (no leading whitespace)
+        if (is_indicator && SECTION_HEADERS.count(first_token_upper)) {
+            if (first_token_upper == "NAME") {
+                current_section = MpsSection::NAME;
+                if (free_tokens.size() >= 2) {
+                    state.problem_name = free_tokens[1];
                 }
+            } else if (first_token_upper == "OBJSENSE") {
+                current_section = MpsSection::OBJSENSE;
+            } else if (first_token_upper == "ROWS") {
+                current_section = MpsSection::ROWS;
+                state.has_rows_section = true;
+            } else if (first_token_upper == "COLUMNS") {
+                current_section = MpsSection::COLUMNS;
+                state.has_columns_section = true;
+            } else if (first_token_upper == "RHS") {
+                current_section = MpsSection::RHS;
+            } else if (first_token_upper == "RANGES") {
+                current_section = MpsSection::RANGES;
+            } else if (first_token_upper == "BOUNDS") {
+                current_section = MpsSection::BOUNDS;
+            } else if (first_token_upper == "ENDATA") {
+                current_section = MpsSection::ENDATA;
+                state.has_endata_section = true;
+                break;
             }
             continue;
-        } else if (first_token_upper == "ROWS") {
-            current_section = MpsSection::ROWS;
-            state.has_rows_section = true;
-            continue;
-        } else if (first_token_upper == "COLUMNS") {
-            current_section = MpsSection::COLUMNS;
-            state.has_columns_section = true;
-            continue;
-        } else if (first_token_upper == "RHS") {
-            current_section = MpsSection::RHS;
-            continue;
-        } else if (first_token_upper == "RANGES") {
-            current_section = MpsSection::RANGES;
-            continue;
-        } else if (first_token_upper == "BOUNDS") {
-            current_section = MpsSection::BOUNDS;
-            continue;
-        } else if (first_token_upper == "ENDATA") {
-            current_section = MpsSection::ENDATA;
-            state.has_endata_section = true;
-            break;
         }
 
         // Section Content Parsing
         switch (current_section) {
+            case MpsSection::NONE:
+            case MpsSection::NAME:
+            case MpsSection::ENDATA:
+                break;
+
             case MpsSection::OBJSENSE: {
-                std::string sense_tok = toUpper(tokens[0]);
+                std::string sense_tok = toUpper(free_tokens[0]);
                 if (sense_tok == "MAX" || sense_tok == "MAXIMIZE") {
                     state.sense = ObjectiveSense::MAXIMIZE;
                 } else if (sense_tok == "MIN" || sense_tok == "MINIMIZE") {
@@ -230,11 +197,11 @@ model::CanonicalModel MpsReader::readFromStream(std::istream& stream,
             }
 
             case MpsSection::ROWS: {
-                if (tokens.size() < 2) {
+                if (free_tokens.size() < 2) {
                     throw makeError("Malformed ROWS line, expected: <type> <row_name>");
                 }
-                char rtype = static_cast<char>(std::toupper(static_cast<unsigned char>(tokens[0][0])));
-                std::string rname = tokens[1];
+                char rtype = static_cast<char>(std::toupper(static_cast<unsigned char>(free_tokens[0][0])));
+                std::string rname = free_tokens[1];
 
                 if (rtype != 'N' && rtype != 'L' && rtype != 'G' && rtype != 'E') {
                     throw makeError("Unknown row type '" + std::string(1, rtype) + "' for row '" + rname + "'");
@@ -256,19 +223,9 @@ model::CanonicalModel MpsReader::readFromStream(std::istream& stream,
             }
 
             case MpsSection::COLUMNS: {
-                if (tokens.size() < 3) {
-                    throw makeError("Malformed COLUMNS line, expected: <var_name> <row_name> <value>");
-                }
-                std::string var_name = tokens[0];
-                std::string row_name1 = tokens[1];
-                std::string val_str1 = tokens[2];
-
                 // Check for MPS Integer Marker Cards ('MARK0000', 'INTORG', 'INTEND')
-                std::string val_str1_upper = toUpper(val_str1);
-                std::string row1_upper = toUpper(row_name1);
-
-                if (row1_upper.find("MARK") != std::string::npos || val_str1_upper.find("MARK") != std::string::npos) {
-                    std::string combined = toUpper(line);
+                std::string combined = toUpper(line);
+                if (combined.find("MARK") != std::string::npos) {
                     if (combined.find("INTORG") != std::string::npos) {
                         state.in_integer_block = true;
                     } else if (combined.find("INTEND") != std::string::npos) {
@@ -277,9 +234,14 @@ model::CanonicalModel MpsReader::readFromStream(std::istream& stream,
                     continue; // Skip creating a variable/triplet for marker lines
                 }
 
+                if (free_tokens.size() < 3) {
+                    throw makeError("Malformed COLUMNS line, expected: <var_name> <row_name> <value>");
+                }
+                std::string var_name = free_tokens[0];
                 Index var_idx = state.getOrAddVariable(var_name);
 
                 auto processPair = [&](const std::string& rname, const std::string& val_str) {
+                    if (rname.empty() || val_str.empty()) return;
                     double val = 0.0;
                     try {
                         val = std::stod(val_str);
@@ -297,21 +259,37 @@ model::CanonicalModel MpsReader::readFromStream(std::istream& stream,
                     }
                 };
 
-                processPair(row_name1, val_str1);
-
-                if (tokens.size() >= 5) {
-                    std::string row_name2 = tokens[3];
-                    std::string val_str2 = tokens[4];
-                    processPair(row_name2, val_str2);
+                processPair(free_tokens[1], free_tokens[2]);
+                if (free_tokens.size() >= 5) {
+                    processPair(free_tokens[3], free_tokens[4]);
                 }
                 break;
             }
 
             case MpsSection::RHS: {
-                if (tokens.size() < 3) {
-                    throw makeError("Malformed RHS line, expected: <rhs_set> <row_name> <value>");
+                std::string row_name1, val_str1, row_name2, val_str2;
+                if (free_tokens.size() == 2) {
+                    row_name1 = free_tokens[0];
+                    val_str1 = free_tokens[1];
+                } else if (free_tokens.size() == 3) {
+                    row_name1 = free_tokens[1];
+                    val_str1 = free_tokens[2];
+                } else if (free_tokens.size() == 4) {
+                    row_name1 = free_tokens[0];
+                    val_str1 = free_tokens[1];
+                    row_name2 = free_tokens[2];
+                    val_str2 = free_tokens[3];
+                } else if (free_tokens.size() >= 5) {
+                    row_name1 = free_tokens[1];
+                    val_str1 = free_tokens[2];
+                    row_name2 = free_tokens[3];
+                    val_str2 = free_tokens[4];
+                } else {
+                    throw makeError("Malformed RHS line, expected: [rhs_set] <row_name> <value>");
                 }
+
                 auto processRhsPair = [&](const std::string& rname, const std::string& val_str) {
+                    if (rname.empty() || val_str.empty()) return;
                     double val = 0.0;
                     try {
                         val = std::stod(val_str);
@@ -321,19 +299,35 @@ model::CanonicalModel MpsReader::readFromStream(std::istream& stream,
                     state.rhs_values[rname] = val;
                 };
 
-                processRhsPair(tokens[1], tokens[2]);
-
-                if (tokens.size() >= 5) {
-                    processRhsPair(tokens[3], tokens[4]);
-                }
+                processRhsPair(row_name1, val_str1);
+                processRhsPair(row_name2, val_str2);
                 break;
             }
 
             case MpsSection::RANGES: {
-                if (tokens.size() < 3) {
-                    throw makeError("Malformed RANGES line, expected: <range_set> <row_name> <value>");
+                std::string row_name1, val_str1, row_name2, val_str2;
+                if (free_tokens.size() == 2) {
+                    row_name1 = free_tokens[0];
+                    val_str1 = free_tokens[1];
+                } else if (free_tokens.size() == 3) {
+                    row_name1 = free_tokens[1];
+                    val_str1 = free_tokens[2];
+                } else if (free_tokens.size() == 4) {
+                    row_name1 = free_tokens[0];
+                    val_str1 = free_tokens[1];
+                    row_name2 = free_tokens[2];
+                    val_str2 = free_tokens[3];
+                } else if (free_tokens.size() >= 5) {
+                    row_name1 = free_tokens[1];
+                    val_str1 = free_tokens[2];
+                    row_name2 = free_tokens[3];
+                    val_str2 = free_tokens[4];
+                } else {
+                    throw makeError("Malformed RANGES line, expected: [range_set] <row_name> <value>");
                 }
+
                 auto processRangePair = [&](const std::string& rname, const std::string& val_str) {
+                    if (rname.empty() || val_str.empty()) return;
                     double val = 0.0;
                     try {
                         val = std::stod(val_str);
@@ -343,33 +337,46 @@ model::CanonicalModel MpsReader::readFromStream(std::istream& stream,
                     state.range_values[rname] = val;
                 };
 
-                processRangePair(tokens[1], tokens[2]);
-
-                if (tokens.size() >= 5) {
-                    processRangePair(tokens[3], tokens[4]);
-                }
+                processRangePair(row_name1, val_str1);
+                processRangePair(row_name2, val_str2);
                 break;
             }
 
             case MpsSection::BOUNDS: {
-                if (tokens.size() < 3) {
-                    throw makeError("Malformed BOUNDS line, expected: <type> <bound_set> <var_name> [val]");
+                if (free_tokens.size() < 2) {
+                    throw makeError("Malformed BOUNDS line, expected: <type> [bound_set] <var_name> [val]");
                 }
-                std::string btype = toUpper(tokens[0]);
-                std::string var_name = tokens[2];
+                std::string btype = toUpper(free_tokens[0]);
+                std::string var_name;
+                std::string val_str;
 
+                if (btype == "FR" || btype == "MI" || btype == "PL" || btype == "BV") {
+                    var_name = (free_tokens.size() == 2) ? free_tokens[1] : free_tokens[2];
+                } else {
+                    if (free_tokens.size() == 3) {
+                        var_name = free_tokens[1];
+                        val_str = free_tokens[2];
+                    } else if (free_tokens.size() >= 4) {
+                        var_name = free_tokens[2];
+                        val_str = free_tokens[3];
+                    } else {
+                        throw makeError("Malformed BOUNDS line, expected: <type> [bound_set] <var_name> <val>");
+                    }
+                }
+
+                if (var_name.empty()) continue;
                 state.var_has_bounds_card.insert(var_name);
                 Index var_idx = state.getOrAddVariable(var_name);
 
                 double val = 0.0;
                 if (btype != "FR" && btype != "MI" && btype != "PL" && btype != "BV") {
-                    if (tokens.size() < 4) {
+                    if (val_str.empty()) {
                         throw makeError("Bound type '" + btype + "' requires value parameter for variable '" + var_name + "'");
                     }
                     try {
-                        val = std::stod(tokens[3]);
+                        val = std::stod(val_str);
                     } catch (...) {
-                        throw makeError("Invalid numerical bound value '" + tokens[3] + "' for variable '" + var_name + "'");
+                        throw makeError("Invalid numerical bound value '" + val_str + "' for variable '" + var_name + "'");
                     }
                 }
 
@@ -403,8 +410,6 @@ model::CanonicalModel MpsReader::readFromStream(std::istream& stream,
                 break;
             }
 
-            default:
-                break;
         }
     }
 

@@ -78,4 +78,62 @@ double euclideanNorm(std::span<const double> x) {
     return std::sqrt(sum_sq);
 }
 
+void projectBox(std::span<const double> x, std::span<const double> lower, std::span<const double> upper, std::span<double> result) {
+    if (x.size() != lower.size() || x.size() != upper.size() || x.size() != result.size()) {
+        throw std::invalid_argument("Vector dimension mismatch in projectBox");
+    }
+    for (std::size_t i = 0; i < x.size(); ++i) {
+        double val = x[i];
+        if (!isNegativeInfinity(lower[i]) && val < lower[i]) {
+            val = lower[i];
+        }
+        if (!isPositiveInfinity(upper[i]) && val > upper[i]) {
+            val = upper[i];
+        }
+        result[i] = val;
+    }
+}
+
+void componentwiseMul(std::span<const double> x, std::span<const double> y, std::span<double> result) {
+    if (x.size() != y.size() || x.size() != result.size()) {
+        throw std::invalid_argument("Vector dimension mismatch in componentwiseMul");
+    }
+    for (std::size_t i = 0; i < x.size(); ++i) {
+        result[i] = x[i] * y[i];
+    }
+}
+
+void componentwiseDiv(std::span<const double> x, std::span<const double> y, std::span<double> result) {
+    if (x.size() != y.size() || x.size() != result.size()) {
+        throw std::invalid_argument("Vector dimension mismatch in componentwiseDiv");
+    }
+    for (std::size_t i = 0; i < x.size(); ++i) {
+        if (std::abs(y[i]) <= K_ZERO_TOLERANCE && y[i] == 0.0) { // Check strict zero for safe div
+            result[i] = 0.0;
+        } else if (y[i] == 0.0) {
+            result[i] = 0.0;
+        } else {
+            result[i] = x[i] / y[i];
+        }
+    }
+}
+
+double sumOfSquares(std::span<const double> x) {
+    double sum_sq = 0.0;
+    for (std::size_t i = 0; i < x.size(); ++i) {
+        sum_sq += x[i] * x[i];
+    }
+    return sum_sq;
+}
+
+double positivePartNorm(std::span<const double> x) {
+    double sum_sq = 0.0;
+    for (std::size_t i = 0; i < x.size(); ++i) {
+        if (x[i] > 0.0) {
+            sum_sq += x[i] * x[i];
+        }
+    }
+    return std::sqrt(sum_sq);
+}
+
 } // namespace xenith::numerics

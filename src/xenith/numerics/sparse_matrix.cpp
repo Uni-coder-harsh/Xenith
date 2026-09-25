@@ -285,4 +285,167 @@ void SparseMatrix::multiplyTranspose(std::span<const double> x, std::span<double
     }
 }
 
+void SparseMatrix::rowInfinityNorms(std::span<double> out) const {
+    if (out.size() != m_rows) {
+        throw std::invalid_argument("Output vector out size mismatch in rowInfinityNorms");
+    }
+    std::fill(out.begin(), out.end(), 0.0);
+    if (m_format == SparseStorageFormat::CSC) {
+        for (Index j = 0; j < m_cols; ++j) {
+            for (Index p = m_outerPtr[j]; p < m_outerPtr[j + 1]; ++p) {
+                Index i = m_innerIndices[p];
+                out[i] = std::max(out[i], std::abs(m_values[p]));
+            }
+        }
+    } else {
+        for (Index i = 0; i < m_rows; ++i) {
+            for (Index p = m_outerPtr[i]; p < m_outerPtr[i + 1]; ++p) {
+                out[i] = std::max(out[i], std::abs(m_values[p]));
+            }
+        }
+    }
+}
+
+void SparseMatrix::colInfinityNorms(std::span<double> out) const {
+    if (out.size() != m_cols) {
+        throw std::invalid_argument("Output vector out size mismatch in colInfinityNorms");
+    }
+    std::fill(out.begin(), out.end(), 0.0);
+    if (m_format == SparseStorageFormat::CSC) {
+        for (Index j = 0; j < m_cols; ++j) {
+            for (Index p = m_outerPtr[j]; p < m_outerPtr[j + 1]; ++p) {
+                out[j] = std::max(out[j], std::abs(m_values[p]));
+            }
+        }
+    } else {
+        for (Index i = 0; i < m_rows; ++i) {
+            for (Index p = m_outerPtr[i]; p < m_outerPtr[i + 1]; ++p) {
+                Index j = m_innerIndices[p];
+                out[j] = std::max(out[j], std::abs(m_values[p]));
+            }
+        }
+    }
+}
+
+void SparseMatrix::rowL1Norms(std::span<double> out) const {
+    if (out.size() != m_rows) {
+        throw std::invalid_argument("Output vector out size mismatch in rowL1Norms");
+    }
+    std::fill(out.begin(), out.end(), 0.0);
+    if (m_format == SparseStorageFormat::CSC) {
+        for (Index j = 0; j < m_cols; ++j) {
+            for (Index p = m_outerPtr[j]; p < m_outerPtr[j + 1]; ++p) {
+                Index i = m_innerIndices[p];
+                out[i] += std::abs(m_values[p]);
+            }
+        }
+    } else {
+        for (Index i = 0; i < m_rows; ++i) {
+            for (Index p = m_outerPtr[i]; p < m_outerPtr[i + 1]; ++p) {
+                out[i] += std::abs(m_values[p]);
+            }
+        }
+    }
+}
+
+void SparseMatrix::colL1Norms(std::span<double> out) const {
+    if (out.size() != m_cols) {
+        throw std::invalid_argument("Output vector out size mismatch in colL1Norms");
+    }
+    std::fill(out.begin(), out.end(), 0.0);
+    if (m_format == SparseStorageFormat::CSC) {
+        for (Index j = 0; j < m_cols; ++j) {
+            for (Index p = m_outerPtr[j]; p < m_outerPtr[j + 1]; ++p) {
+                out[j] += std::abs(m_values[p]);
+            }
+        }
+    } else {
+        for (Index i = 0; i < m_rows; ++i) {
+            for (Index p = m_outerPtr[i]; p < m_outerPtr[i + 1]; ++p) {
+                Index j = m_innerIndices[p];
+                out[j] += std::abs(m_values[p]);
+            }
+        }
+    }
+}
+
+void SparseMatrix::scaleRows(std::span<const double> diag) {
+    if (diag.size() != m_rows) {
+        throw std::invalid_argument("Input vector diag size mismatch in scaleRows");
+    }
+    if (m_format == SparseStorageFormat::CSC) {
+        for (Index j = 0; j < m_cols; ++j) {
+            for (Index p = m_outerPtr[j]; p < m_outerPtr[j + 1]; ++p) {
+                Index i = m_innerIndices[p];
+                m_values[p] *= diag[i];
+            }
+        }
+    } else {
+        for (Index i = 0; i < m_rows; ++i) {
+            for (Index p = m_outerPtr[i]; p < m_outerPtr[i + 1]; ++p) {
+                m_values[p] *= diag[i];
+            }
+        }
+    }
+}
+
+void SparseMatrix::scaleCols(std::span<const double> diag) {
+    if (diag.size() != m_cols) {
+        throw std::invalid_argument("Input vector diag size mismatch in scaleCols");
+    }
+    if (m_format == SparseStorageFormat::CSC) {
+        for (Index j = 0; j < m_cols; ++j) {
+            for (Index p = m_outerPtr[j]; p < m_outerPtr[j + 1]; ++p) {
+                m_values[p] *= diag[j];
+            }
+        }
+    } else {
+        for (Index i = 0; i < m_rows; ++i) {
+            for (Index p = m_outerPtr[i]; p < m_outerPtr[i + 1]; ++p) {
+                Index j = m_innerIndices[p];
+                m_values[p] *= diag[j];
+            }
+        }
+    }
+}
+
+double SparseMatrix::spectralNormEstimate(Index num_iters) const {
+    if (m_rows == 0 || m_cols == 0) return 0.0;
+    
+    std::vector<double> v(m_cols, 1.0);
+    // Simple deterministic seed: normalize ones
+    double v_norm = 0.0;
+    for (double val : v) v_norm += val * val;
+    v_norm = std::sqrt(v_norm);
+    for (double& val : v) val /= v_norm;
+
+    std::vector<double> u(m_rows, 0.0);
+    std::vector<double> v_new(m_cols, 0.0);
+
+    for (Index iter = 0; iter < num_iters; ++iter) {
+        // u = A v
+        multiply(v, u);
+        // v_new = A^T u
+        multiplyTranspose(u, v_new);
+
+        v_norm = 0.0;
+        for (double val : v_new) v_norm += val * val;
+        v_norm = std::sqrt(v_norm);
+        
+        if (v_norm > 0.0) {
+            for (std::size_t j = 0; j < m_cols; ++j) {
+                v[j] = v_new[j] / v_norm;
+            }
+        } else {
+            break;
+        }
+    }
+    
+    // Rayleigh quotient: v^T A^T A v
+    multiply(v, u);
+    double rayleigh = 0.0;
+    for (double val : u) rayleigh += val * val;
+    return std::sqrt(rayleigh);
+}
+
 } // namespace xenith::numerics

@@ -48,6 +48,34 @@ double infinityNorm(std::span<const double> x);
  */
 double euclideanNorm(std::span<const double> x);
 
+/**
+ * @brief Componentwise projection: result[i] = clamp(x[i], lower[i], upper[i]).
+ * @throws std::invalid_argument if sizes mismatch.
+ */
+void projectBox(std::span<const double> x, std::span<const double> lower, std::span<const double> upper, std::span<double> result);
+
+/**
+ * @brief Componentwise multiplication: result[i] = x[i] * y[i].
+ * @throws std::invalid_argument if sizes mismatch.
+ */
+void componentwiseMul(std::span<const double> x, std::span<const double> y, std::span<double> result);
+
+/**
+ * @brief Componentwise division: result[i] = x[i] / y[i]. Safe division (y[i] == 0 => result[i] = 0).
+ * @throws std::invalid_argument if sizes mismatch.
+ */
+void componentwiseDiv(std::span<const double> x, std::span<const double> y, std::span<double> result);
+
+/**
+ * @brief Returns sum(x[i]^2) without sqrt.
+ */
+double sumOfSquares(std::span<const double> x);
+
+/**
+ * @brief Returns sqrt(sum(max(0, x[i])^2)).
+ */
+double positivePartNorm(std::span<const double> x);
+
 } // namespace xenith::numerics
 
 #endif // XENITH_NUMERICS_VECTOR_OPS_HPP

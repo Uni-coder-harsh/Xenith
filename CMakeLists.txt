@@ -42,13 +42,16 @@ endif()
 add_library(xenith_lib STATIC
     src/xenith/numerics/vector_ops.cpp
     src/xenith/numerics/sparse_matrix.cpp
+    src/xenith/numerics/scaling.cpp
     src/xenith/numerics/lu_factorization.cpp
     src/xenith/model/canonical_model.cpp
     src/xenith/model/model_validator.cpp
     src/xenith/io/mps/mps_reader.cpp
     src/xenith/solver/common/basis_manager.cpp
     src/xenith/solver/lp/revised_simplex_solver.cpp
+    src/xenith/solver/lp/pdlp_solver.cpp
     src/xenith/solution/lp_solution_validator.cpp
+    src/xenith/presolve/presolver.cpp
     src/xenith/ui/terminal_ui.cpp
 )
 
